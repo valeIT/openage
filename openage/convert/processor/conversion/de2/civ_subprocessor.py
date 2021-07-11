@@ -1,4 +1,4 @@
-# Copyright 2020-2020 the openage authors. See copying.md for legal info.
+# Copyright 2020-2021 the openage authors. See copying.md for legal info.
 #
 # pylint: disable=too-many-locals,too-many-statements,too-many-branches
 
@@ -70,6 +70,11 @@ class DE2CivSubprocessor:
                         # This tech is usually unlocked by an age up
                         tech_id = civ_bonus.tech["required_techs"][1].get_value()
 
+                        if tech_id not in dataset.tech_groups.keys():
+                            # Circumvents a "funny" duplicate castle age up tech for Incas
+                            # The required tech of the dupicate is the age up we are looking for
+                            tech_id = dataset.genie_techs[tech_id]["required_techs"][0].get_value()
+
                         if not dataset.tech_groups[tech_id].is_researchable():
                             # Fall back to the first tech if the second is not researchable
                             tech_id = civ_bonus.tech["required_techs"][0].get_value()
@@ -107,7 +112,7 @@ class DE2CivSubprocessor:
                                                   wrapper_name,
                                                   dataset.nyan_api_objects,
                                                   wrapper_location)
-            wrapper_raw_api_object.add_raw_parent("engine.aux.patch.Patch")
+            wrapper_raw_api_object.add_raw_parent("engine.util.patch.Patch")
 
             # Nyan patch
             nyan_patch_name = f"{tech_name}CivBonus"
@@ -117,18 +122,18 @@ class DE2CivSubprocessor:
                                                      nyan_patch_name,
                                                      dataset.nyan_api_objects,
                                                      nyan_patch_location)
-            nyan_patch_raw_api_object.add_raw_parent("engine.aux.patch.NyanPatch")
+            nyan_patch_raw_api_object.add_raw_parent("engine.util.patch.NyanPatch")
             nyan_patch_raw_api_object.set_patch_target(patch_target_forward_ref)
 
             nyan_patch_raw_api_object.add_raw_patch_member("updates",
                                                            patches,
-                                                           "engine.aux.tech.Tech",
+                                                           "engine.util.tech.Tech",
                                                            MemberOperator.ADD)
 
             patch_forward_ref = ForwardRef(civ_group, nyan_patch_ref)
             wrapper_raw_api_object.add_raw_member("patch",
                                                   patch_forward_ref,
-                                                  "engine.aux.patch.Patch")
+                                                  "engine.util.patch.Patch")
 
             civ_group.add_raw_api_object(wrapper_raw_api_object)
             civ_group.add_raw_api_object(nyan_patch_raw_api_object)
